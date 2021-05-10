@@ -1,0 +1,68 @@
+//======================================
+// Differential Test Signal - Step
+//======================================
+
+// Turn a (positive/negative) function into a waveform
+network DSignal(species X⁺ , function f) {
+   number precision = 1000
+
+   # ->{{precision*pos(f())}} X⁺;   X⁺ ->{precision} #
+   // # ->{{precision*pos(-f())}} X⁻;   X⁻ ->{precision } #
+}
+
+species {A⁺,S,X1,X1a,X2,X2a,Y,Ya,Z,Za,K,PP,C1,C1a,C2a,C3} 
+amount A⁺@ 0M
+amount X1 @ 60 M
+amount X1a @ 0 M
+amount X2 @ 60 M
+amount X2a @ 0 M
+amount Y @ 60 M
+amount Ya @ 0 M
+amount Z @ 60 M
+amount Za @ 0 M   
+amount S@ 0M
+amount K@ 1M
+amount PP@ 1M
+amount C1@ 0M
+amount C1a@ 0M
+amount C2a@ 0M
+amount C3@ 0M
+   number k1 = 1
+   number k2 = 1
+   number k3 = 1
+   number kp = 10
+   number ka = 5
+   number kpp = 40
+
+// Step function
+DSignal(A⁺, fun(){cond(time<40,0.25,cond(time<80,1.5,cond(time<120,3,cond(time<160,2,0.5))))})
+
+report  A⁺,S,X1a+C1+C1a+C3,X2a+C1+C2a+C3,Ya+C1a+C2a+C3,Za,X1+X1a+C1+C1a+C3,X2a+X2+C1+C2a+C3,Ya+Y+C1a+C2a+C3,Za+Z,X1,X2,Y,Z,C1,C1a,C2a,C3
+
+
+//======================================
+// Advanced examples: Overriding the 
+// default mass action kinetics
+//======================================
+// The mass-action kinetics reactions:
+A⁺ ->{200} S + S + A⁺
+S ->{200} #
+X1 + K ->{kp} K + X1a
+X1 + S ->{ka} S + X1a
+X1a + PP ->{kpp} PP + X1
+X2 + K ->{kp} K + X2a
+X2 + S ->{ka} S + X2a
+X2a + PP ->{kpp} PP + X2
+Y + K ->{kp} K + Ya
+X1a + X2a {200} <->{200} C1
+C1 + PP ->{kpp} X1 + X2a + PP
+C1 + PP ->{kpp} X1a + X2 + PP
+Y + C1 ->{k1} C1 + Ya
+Ya + PP ->{kpp} PP + Y
+Z + K ->{kp} K + Za
+Z + Ya ->{k2} Ya + Za
+Za + X1a ->{k3} X1a + Z
+Za + X2a ->{k3} X2a + Z
+Za + PP ->{kpp} PP + Z
+
+equilibrate for 200
